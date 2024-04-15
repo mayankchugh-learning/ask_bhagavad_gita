@@ -1,5 +1,5 @@
 streamlit
-pypdf2
+pypdf
 langchain
 langchain-google-genai
 google-generativeai
