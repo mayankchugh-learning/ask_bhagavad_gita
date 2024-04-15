@@ -1,6 +1,4 @@
-Certainly! Here's a README.md file for your code:
 
-```
 # Bhagvad Gita Conversational AI
 
 This Streamlit application allows users to ask questions to Lord Krishna based on the text from Bhagavad Gita As It Is. The application utilizes AI-powered conversational capabilities to provide answers to user queries and insights from the text.
