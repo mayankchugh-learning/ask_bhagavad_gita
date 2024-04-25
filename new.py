@@ -82,8 +82,9 @@ def main():
 
     user_question = st.text_input("Ask a Question to Bhagwan Krishna")
 
-    if user_question:
-        user_input(user_question)
+    if st.button("Submit"):
+        if user_question:
+            user_input(user_question)
 
 
 if __name__ == "__main__":
