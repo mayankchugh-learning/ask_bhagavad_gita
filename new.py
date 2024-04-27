@@ -3,89 +3,119 @@ from pypdf import PdfReader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 import os
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
-import google.generativeai as genai
 from langchain.vectorstores import FAISS
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain.chains.question_answering import load_qa_chain
-from langchain.prompts import PromptTemplate
+# from langchain.prompts import PromptTemplate, LLMChain
 from dotenv import load_dotenv
+from langchain_core.prompts import PromptTemplate
+from langchain.chains import LLMChain
 
+
+
+# Load environment variables
 load_dotenv()
-os.getenv("GOOGLE_API_KEY")
-genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+api_key = os.getenv("GOOGLE_API_KEY")
 
+# Configure the Google API key
+GoogleGenerativeAIEmbeddings.api_key = api_key
 
+# Function to load and split the text from a PDF file
 def get_file_text():
     text = ""
     pdf_reader = PdfReader('data/Bhagavad-Gita As It Is.pdf')
     for page in pdf_reader.pages:
-        text += page.extract_text()            
-
+        text += page.extract_text()
     return text
 
-
+# Function to split text into chunks
 def get_text_chunks(text):
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=10000, chunk_overlap=1000)
-    chunks = text_splitter.split_text(text)
-    return chunks
+    return text_splitter.split_text(text)
 
-
+# Function to load or create a vector store from the text chunks
 def get_vector_store(text_chunks):
     embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
     vector_store = FAISS.from_texts(text_chunks, embedding=embeddings)
     vector_store.save_local("faiss_index")
+    return vector_store
 
-
+# Function to create the conversational chain
 def get_conversational_chain():
-    prompt_template = """You are a lord krishna and the person or user is comming to you for finding
-     the answer about thier life issue now you have read the question {question} and you have find the
-    correct vage from the context and the provide the correct answer as helping him to solve the problem
-    provide the small and short answer with 4-5 lines of information.
-    provide the shlok lines which you find similar to the correct answer or problem
-    with examples
-    translate the answer in hindi 
-    Context:\n {context}?\n
-
+    prompt_template = """
+    You are Lord Krishna, and the user is asking questions about their life issues.
+    Read the question {question} and find the correct verse from the context.
+    Provide a concise answer (4-5 lines) and translate it into Hindi.
+    Context:\n{context}\n
     Answer:
     """
 
-    model = ChatGoogleGenerativeAI(model="models/gemini-1.5-pro-latest",
-                                   temperature=0.3)
+    # Define the language model
+    model = ChatGoogleGenerativeAI(model="models/gemini-1.5-pro-latest", temperature=0.3)
 
+    # Create a prompt template
     prompt = PromptTemplate(template=prompt_template, input_variables=["context", "question"])
-    chain = load_qa_chain(model, chain_type="stuff", prompt=prompt)
+    
+    # Create the conversational chain
+    return LLMChain(llm=model, prompt=prompt)
 
-    return chain
+# Function to predict the next question
+def predict_next_question(user_question):
+    # Create a prompt template for predicting the next question
+    prompt_template = """
+    Based on the user's question: {user_question}, predict the next question the user might ask.
+    """
 
+    # Define the language model
+    model = ChatGoogleGenerativeAI(model="models/gemini-1.5-pro-latest", temperature=0.3)
+    
+    # Create the prompt and LLM chain
+    prompt = PromptTemplate(template=prompt_template, input_variables=["user_question"])
+    chain = LLMChain(llm=model, prompt=prompt)
+    
+    # Use the chain to predict the next question
+    next_question = chain.run(user_question)
+    
+    return next_question
 
+# Function to handle user input
 def user_input(user_question):
     embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
 
+    # Load the vector store
     new_db = FAISS.load_local("faiss_index", embeddings, allow_dangerous_deserialization=True)
-    docs = new_db.similarity_search(user_question)
-
-    chain = get_conversational_chain()
-
-    response = chain(
-        {"input_documents": docs, "question": user_question},
-        return_only_outputs=True)
-
-    print(response)
-    st.write("Reply: ", response["output_text"])
-
-
-def main():
     
-    st.set_page_config("Chat Lord Krishna")
-    st.header("Bhagvad Gita As It Is📖")
-    st.subheader('Ask your question to Lord Krishan 🤔💭')
+    # Perform a similarity search and retrieve relevant documents as context
+    docs = new_db.similarity_search(user_question)
+    
+    # Get the conversational chain
+    chain = get_conversational_chain()
+    
+    # Run the chain with the retrieved context and the user's question
+    response = chain.run({"context": docs, "question": user_question})
 
+    # Create a container to display the response
+    with st.container():
+        st.write("Reply: ", response)
+
+    # Predict the next question
+    next_question = predict_next_question(user_question)
+    
+    # Display the predicted next question in the sidebar
+    st.sidebar.header("Predicted Next Question")
+    st.sidebar.write(next_question)
+
+# Main function
+def main():
+    st.set_page_config("Chat Lord Krishna")
+    st.header("Bhagavad Gita As It Is📖")
+    st.subheader('Ask your question to Lord Krishna 🤔💭')
+
+    # User input
     user_question = st.text_input("Ask a Question to Bhagwan Krishna")
 
     if st.button("Submit"):
         if user_question:
             user_input(user_question)
-
 
 if __name__ == "__main__":
     main()
