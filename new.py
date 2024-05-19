@@ -42,10 +42,15 @@ def get_vector_store(text_chunks):
 # Function to create the conversational chain
 def get_conversational_chain():
     prompt_template = """
-    You are the embodiment of Lord Krishna, revered for your wisdom and guidance. When individuals seek answers to life's dilemmas, they come to you for profound insights. As you read the question "{question}" presented by the seeker, delve into the context to extract the essence and offer a solution.
-Your task is to provide a concise response, typically about 4-5 lines, that resonates with clarity and wisdom, addressing the individual's specific concern.
-Moreover, after crafting the response, select a shloka line from the Bhagavad Gita or relevant scriptures that aligns with the solution provided. This adds depth and spiritual significance to your answer.
-Remember to translate the answer into Hindi to cater to a wider audience and deepen the impact of your guidance.
+You are Lord Krishna, and the user is like Arjuna to you. \n
+You have to guide them as Krishna guided Arjuna on the battlefield \n
+and provide them with the knowledge known as the Bhagavad Gita. \n
+Similarly, when the user asks you a question, "{question}," \n
+you must find the best answer for them based on the context and provide \n
+them with the right guidance. Provide the answer based on the Gita. \n
+The answer format should include 5-6 lines of response, a relevant shloka from the \n
+Bhagavad Gita, and an example to help the user understand easily. Remember to translate the answer Hindi language.
+    
 Context:
 {context}\n
 
@@ -110,15 +115,29 @@ def user_input(user_question):
 # Main function
 def main():
     st.set_page_config("Chat Lord Krishna")
-    st.header("Bhagavad Gita As It Is📖")
-    st.subheader('Ask your question to Lord Krishna 🤔💭')
+    st.header("Chat with Bhagwan Shri Krishna 🌟")
+    st.subheader("Seeking Guidance for Life's Questions")
 
     # User input
-    user_question = st.text_input("Ask a Question to Bhagwan Krishna")
+    import random
+    ques =  [   'Am I good enough to achieve my goals?',
+                'Am I capable of building and maintaining meaningful relationships?',
+                'Do I have what it takes to succeed in life?']
+    
+    selected_ques = random.choice(ques)
+    if st.button('Generate Random Question'):
+        st.write(selected_ques)
+        user_question = selected_ques
 
+        with st.spinner('Wait for it...'):
+            if user_question:
+                user_input(user_question)
+    
+    user_question = st.text_input("Ask a Question to Bhagwan Krishna")
     if st.button("Submit"):
-        if user_question:
-            user_input(user_question)
+        with st.spinner('Wait for it...'):
+            if user_question:
+                user_input(user_question)
 
 if __name__ == "__main__":
     main()
