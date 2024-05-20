@@ -14,7 +14,8 @@ from langchain.chains import LLMChain
 
 # Load environment variables
 load_dotenv()
-api_key = os.getenv("GOOGLE_API_KEY")
+# api_key = os.getenv("GOOGLE_API_KEY")
+api_key = st.secrets["GOOGLE_API_KEY"] 
 
 # Configure the Google API key
 GoogleGenerativeAIEmbeddings.api_key = api_key
