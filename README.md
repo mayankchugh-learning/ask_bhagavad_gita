@@ -14,6 +14,18 @@ Before running the application, make sure you have the following dependencies in
 - pandas
 - dotenv
 
+Create and activate Conda envirnoment
+
+```bash
+conda create -p bhagvadGitaVEnv python -y
+```
+
+## Step 3: Install Dependencies
+
+```bash
+source activate ./bhagvadGitaVEnv
+```
+
 Install dependencies using pip:
 
 ```bash
